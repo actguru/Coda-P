@@ -52,7 +52,7 @@ After installing but before cleaning, "make test" will run two small test batter
 
 # coda-list
 
-### ⭐️ The "codalist" Property List Utility ⭐️
+### ⭐️ The "coda-list" Property List Utility ⭐️
 
 This program slices and dices plists of various formats.
 Each argument to this program is an instruction for inspecting, loading, saving, or altering plists, etc.
