@@ -20,7 +20,7 @@ Plists are easy to create and modify programmatically, and even easier to save a
 ## 🟤 Requirements
 
 * gcc/clang
-* Coda-C Library
+* Coda-C [Library](https://github.com/actguru/Coda-C)
 
 ## 🟢 Building
 
