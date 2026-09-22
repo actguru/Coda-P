@@ -2634,7 +2634,7 @@ Obj Json_FromBlock(int count,pointer block,int flags) {
 		if (obj) {
 			int flags=PList_lastLoadType();
 			if (0==(flags & (PLIST_Apple|PLIST_Binary))) flags|=PLIST_Coda_C;
-			Json_lastLoadTypeThread=PList_lastLoadType();
+			Json_lastLoadTypeThread=flags;
 			}
 		return(obj);
 		}
