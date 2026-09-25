@@ -327,17 +327,12 @@ class $(NewBlock,int count,pointer address) {
 method$(Char,Info) { return Char_F("%s[%d]=(%lld,...) aka huge*",kindO(self),Huge_count(self),*self); }
 
 class $(FromString,char *string) {
-	char *str=string;
-	while(cc_isWhite(*str)) ++str;
-	if (!*str) OAbort("empty <integer> value ''");
-	if (str[0]=='0' && (str[1]=='x' || str[1]=='X'))
-		return Huge_Value( strtoll(str,0,16) );
-	return Huge_Value( strtoll(str,0,10) );
+	return Huge2_FromString(string);
 	}
 
 method$(Char,xmlTag) { return Os("integer"); }
 
-Char $(ToString) { return Char_F("%lld",*self); }
+Char $(ToString) { return Huge2_ToString(self); }
 
 method$(Char,ToDelimiter,int index) {
 	static Char da[]={ Os(", "), Os("<huge>["), Os("]"), Os("?") }; return da[index&3];
@@ -347,6 +342,76 @@ method$(Char,ToStringSub,int index) { return Char_F("%lld",self[index]); }
 
 $boot(StephenMJones) { CodaSig(NewBlock); CodaSig(FromString); CodaSig(ToString); }
 #undef class
+
+	#include <errno.h>
+	typedef unsigned long long uhuge;
+
+Char Huge2_ToString(Huge self) {
+	if (Huge_count(self)!=2) return Char_F("%lld",*self);
+
+	if (self[1]==  0 ) return Char_F("%llu",*self);
+	if (self[1]==(-1)) return Char_F("-%llu",- *self);
+
+	return Char_F("0x%llX%.16llX",self[1],self[0]);
+	}
+
+	static_assert(sizeof(uhuge)==8,"ULL ERROR");
+
+static bool isahex(int cc) {
+	if (cc>='0' && cc<='9') return(1);
+	if (cc>='A' && cc<='F') return(1);
+	if (cc>='a' && cc<='f') return(1);
+	return(0);
+	}
+
+Huge Huge2_FromHex(char *str) {
+	for(;*str=='0';++str) if (!str[1]) break;
+	int len=0;
+	for(;str[len];++len) if (!isahex(str[len])) OAbort("Bad HEX string.");
+	if (!len)   OAbort("empty <hex> value");
+	if (len>32) OAbort("<hex> max is 32 bytes");
+	if (len<=16) return Huge_Value( (huge)strtoull(str,0,16) );
+
+	char hihex[20]; int hilen=len-16;
+	cs_blockCopy(hihex,str,hilen); hihex[hilen]=0;
+
+	Huge self=newOC(Huge,2);
+	self[1]=(huge)strtoull(hihex,0,16);
+	self[0]=(huge)strtoull(str+hilen,0,16);
+	return(self);
+	}
+
+Huge Huge2_FromString(char *string) {
+	char *str=string;
+	while(cc_isWhite(*str)) ++str;
+	bool neg=0; int cc=(*str);
+	if (cc=='+') { ++str;        }
+	ei (cc=='-') { ++str; neg=1; }
+	cc=(*str);     if (!cc) OAbort("empty <integer> value");
+	if (cc=='+' || cc=='-') OAbort("Multiple signs for <integer>");
+	if (cc=='0' && (str[1]=='x' || str[1]=='X')) {
+		if (neg) OAbort("Negative Hex value?");
+		return Huge2_FromHex(str+2);
+		}
+	char *end=0; errno=0;
+	uhuge uval=strtoull(str,&end,10);
+	if (errno) OAbort("Bad Value or Range for <integer>");
+	if (end) {
+		while(cc_isWhite(*end)) ++end;
+		cc=(*end);
+		if (cc) OAbort("Extra chars after <integer> 0x%02x",cc);
+		}
+	if (uval & (1ULL<<63)) {
+		Huge self=newOC(Huge,2);
+		self[1]=(neg ? -1 : 0);
+		self[0]=(huge)(neg ? (-uval) : uval);
+		return(self);
+		}
+	Huge self=newO(Huge);
+	*self=(huge)(neg ? -uval : uval);
+	return(self);
+	}
+
 #define class HugeUID
 CodaClassTransC();
 CodaClass(HugeUID,huge,Huge);
@@ -437,6 +502,8 @@ Char OError() {
 	return Os("Error Object--unknown.");
 	}
 
+	#include <errno.h>
+
 #define class Real
 CodaClassZerosC();
 CodaClass(Real,double,Root);
@@ -454,7 +521,16 @@ class $(FromString,char *string) {
 	char *str=string;
 	while(cc_isWhite(*str)) ++str;
 	if (!*str) OAbort("empty <real> value ''");
-	return Real_Value( cs_toReal(str) );
+
+	char *end=0; errno=0;
+	double dval=strtod(str,&end);
+	if (errno) OAbort("BAD Value or Range for <double>");
+	if (end) {
+		while(cc_isWhite(*end)) ++end;
+		int cc=(*end);
+		if (cc) OAbort("Extra chars after <real> 0x%02x",cc);
+		}
+	return Real_Value(dval);
 	}
 
 Char $(ToString) { return Char_F("%.16e",*self); }
@@ -2128,6 +2204,13 @@ Obj PList_BinaryWrite(Obj stream,Obj container,int flags) {
 			eWrite(&temp,sizeof(temp));
 			}
 
+		ei (isa_(obj,Float)) {
+			int4 temp=(*( (Int4)obj) ); bswap32host(temp);
+			uchar marker = MarkerReal | 2;
+			eWrite(&marker,1);
+			eWrite(&temp,sizeof(temp));
+			}
+
 		ei (isa_(obj,Huge) && sizeO(obj)==16) {
 			Huge hhh=obj;
 			huge h0=hhh[0]; bswap64host(h0);
@@ -2254,6 +2337,7 @@ Obj Unique_obj(Obj uniquer,Obj obj,bool *isadup,int flags) {
 		isa_(obj,Bool) ||
 		isa_(obj,Real) ||
 		isa_(obj,Data) ||
+		isa_(obj,Float) ||
 		isa_(obj,Void) ||
 		obj==0)) ;
 	else { *isadup=0; return(obj); }
@@ -2303,6 +2387,7 @@ void Json_data2os(oPrintf jprintf,pointer stream,char *str,int4 flags) {
 	}
 
 	#include <math.h>
+	#include <errno.h>
 
 	#define ALEN 4096
 
@@ -2472,8 +2557,8 @@ void Json_data2os(oPrintf jprintf,pointer stream,char *str,int4 flags) {
 			}
 		Char string=alocS(j+1); cs_blockCopy(string,_ blob+ _ pos,j);
 		_ pos +=j;
-		huge ival=strtoll(string,0,16);
-		return Huge_Value(ival);
+			Huge Huge2_FromHex(char *str) ;
+		return Huge2_FromHex(string) ;
 		}
 
 	static pointer ptrNumber(Self self) {
@@ -2482,21 +2567,25 @@ void Json_data2os(oPrintf jprintf,pointer stream,char *str,int4 flags) {
 		if (c1=='0' && c2=='x') return ptrHex(self);
 		jsn_ungetCc(self,c2==EOF ? 1 : 2);
 
-		int j=0;
+		int j=0; bool isreal=0;
 		for(j=0;j+_ pos < _ blobNel && j<127;++j) {
 			int cc= _ blob[j+_ pos];
 			if (cc>='0' && cc<='9') ;
-			ei (cc=='-' || cc=='.' || cc=='e' || cc=='E' || cc=='+') ;
+			ei (cc=='-' || cc=='+') { if (j) isreal=1; }
+			ei (cc=='.' || cc=='e' || cc=='E') isreal=1;
 			else break;
 			}
 		Char string=alocS(j+1); cs_blockCopy(string,_ blob+ _ pos,j);
 		_ pos +=j;
-		double dval=strtod(string,0);
-
-		char buf[64]; snprintf(buf,sizeof(buf),"%.16g",dval);
-		bool isreal=cc_inString('.',buf);
-		if (isreal) return Real_Value(dval);
-		return Huge_Value(llround(dval));
+		if (isreal) {
+			errno=0;
+			double dval=strtod(string,0);
+			if (errno) OAbort("Bad Value or Range for <double>");
+			char buf[64]; snprintf(buf,sizeof(buf),"%.16g",dval);
+			isreal=cc_inString('.',buf);
+			if (isreal) return Real_Value(dval);
+			}
+		return Huge2_FromString(string);
 		}
 		Data Data_FromString(Data self,char *string);
 		DateString DateString_FromString(DateString self,char *str);

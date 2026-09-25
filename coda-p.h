@@ -73,6 +73,8 @@ Float Float_Value(float value);
 Float Float_NewBlock(Float self,int count,pointer address);
 Huge Huge_Value(huge value);
 Huge Huge_NewBlock(Huge self,int count,pointer address);
+Char Huge2_ToString(Huge self);
+Huge Huge2_FromString(char *string);
 HugeUID HugeUID_Value(huge value);
 Int4 Int4_Value(int4 value);
 Int4 Int4_NewBlock(Int4 self,int count,pointer address);
