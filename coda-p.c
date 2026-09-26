@@ -22,6 +22,8 @@ along with Coda-P. If not, see <https://www.gnu.org/licenses/>.
 	#define QCopyYears	"2026"
 	#define QVersion	"3.1"
 
+	#define _GNU_SOURCE 1
+
 	#include "./coda-p.h"
 
 Char FileMem_Info(FileMem self);
