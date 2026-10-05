@@ -1,8 +1,8 @@
 # Apple, Linux, Windows (has install issues) # 09/20/2026
 
-VERSION = 3.1
+VERSION = 3.3
 MAJOR   = 3
-COMPAT  = 3.1
+COMPAT  = 3.3
 
 LIBS = -lcoda-c
 
