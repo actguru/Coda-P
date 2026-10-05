@@ -20,7 +20,7 @@ along with Coda-P. If not, see <https://www.gnu.org/licenses/>.
 */
 	#define QWebsite "www.coda-c.com"
 	#define QCopyYears	"2026"
-	#define QVersion	"3.1"
+	#define QVersion	"3.3"
 
 	#define _GNU_SOURCE 1
 
@@ -1038,8 +1038,6 @@ $boot(CList) {
 	#undef  Self
 	#define Self PLPTR1
 
-	enum { MAXioLevel=100, };
-
 	static pointer ptrAbort(Self self,Char msg) {
 		Error_F("line %d: %s",_ lno+1,msg);
 		freeO(msg); msg=0;
@@ -1216,7 +1214,7 @@ static pointer ptrToken(Self self,int flags) {
 	static void SelfNOP(Self junk) { }
 
 	static Obj ptrLoadItem(Self self,char *ender) {
-		if (++_ iLevel>MAXioLevel) OAbort("too many levels(%d). Circular?",_ iLevel);
+		if (++_ iLevel>MAX_PLEVEL) OAbort("too many levels(%d). Circular?",_ iLevel);
 		const $CLEANUP(decLevel) Self selfcopy= self;
 			SelfNOP(selfcopy);
 
@@ -1507,8 +1505,6 @@ char* PList_stringEncode(int bufsize,char *buffer,char *a,Char *extra,bool amp38
 	#undef  Self
 	#define Self PLPTR2
 
-	enum { MAXiLevel=100, };
-
 	#define ePrintf(...) self->oprintf(self->stream,__VA_ARGS__)
 
 	#define hasFlag(bitflag) (self->flags & bitflag)
@@ -1680,7 +1676,7 @@ Obj PList_toStream(Obj stream,Obj container,int flags) {
 		}
 
 	static pointer saveItem(Self self,Obj obj,int isArray,int indent) {
-		if (++_ iLevel>MAXiLevel) OAbort("too many levels(%d). Circular?",_ iLevel);
+		if (++_ iLevel>MAX_PLEVEL) OAbort("too many levels(%d). Circular?",_ iLevel);
 		if (isa_(obj,Dictionary)) {
 			if (!isArray) ePrintf("\n");
 			if (!plist3Dict(self,obj,indent+1)) return(0);
@@ -1830,8 +1826,6 @@ enum {  MarkerNull=0x00, MarkerFalse=0x08, MarkerTrue=0x09, MarkerFill=0x0F, Mar
 
 	typedef struct { uchar magicXXX[6],versionXXX[2]; } Header;
 
-	enum { MAXLEVEL=100, };
-
 	typedef struct PLPTR3_ { unsigned char* blob; int blobNel; Trailer ender; } *PLPTR3;
 	#undef  Self
 	#define Self PLPTR3
@@ -1933,7 +1927,7 @@ Obj PList_BinaryLoad(int count,pointer block) {
 		}
 
 	static void *bplistObject(Self self,int idx,int level,bool isakey) {
-		if (level>=MAXLEVEL) abortF("BPO; too deep, %d / %d",level,MAXLEVEL);
+		if (level>=MAX_PLEVEL) abortF("BPO; too many levels, %d",level);
 		huge off=getoffset(self,idx);
 
 		uchar *cp=(unsigned char *)_ blob+off;
@@ -2069,7 +2063,8 @@ static huge PList_getoat(Dict objdict,pointer address) {
 	return(oat);
 	}
 
-static int4 PList_flatten(Obj container,Array objlist,Dict objdict,Obj uniquer,int flags) {
+static int4 PList_flatten(Obj container,Array objlist,Dict objdict,Obj uniquer,int flags,int level) {
+	if (level>MAX_PLEVEL) { Error_F("too many levels(%d). Circular?",level); return(EOF); }
 
 	bool isadup=0;
 	Obj this=Unique_obj(uniquer,container,&isadup,flags);
@@ -2089,18 +2084,18 @@ static int4 PList_flatten(Obj container,Array objlist,Dict objdict,Obj uniquer,i
 		if (!(flags & PLIST_UnsortedDict)) pointer_sort(vector,nnn,strcmp,0);
 		for(int j=0;j<nnn;++j) {
 			cleanO Char word=Char_Value(vector[j]);
-			int4 loc1=PList_flatten(word, objlist, objdict,uniquer,flags);
+			int4 loc1=PList_flatten(word, objlist, objdict,uniquer,flags,level+1); if (loc1<0) return(EOF);
 			PList_setoat(objdict,vector[j],loc1);
 			}
 		for(int j=0;j<nnn;++j) {
 			Keyword key=Dictionary_keywordFromWord(vector[j]);
-			PList_flatten(key->item, objlist, objdict,uniquer,flags);
+			if (PList_flatten(key->item, objlist, objdict,uniquer,flags,level+1) < 0) return(EOF);
 			}
 		}
 	ei (isa_(container,Array)) {
 		int count=Array_count(container);
 		for(int j=0;j<count;++j) {
-			PList_flatten(Array_sub(container,j), objlist, objdict,uniquer,flags);
+			if (PList_flatten(Array_sub(container,j), objlist, objdict,uniquer,flags,level+1) < 0) return(EOF);
 			}
 		}
 	return(oat);
@@ -2154,7 +2149,7 @@ Obj PList_BinaryWrite(Obj stream,Obj container,int flags) {
 	cleanO Array objlist=newO(Array);
 	cleanO Dict objdict=newO(CDictionary);
 	cleanO Obj uniquer=Unique_obj(0,0,0,0);
-    PList_flatten(container,objlist,objdict,uniquer,flags);
+    if (PList_flatten(container,objlist,objdict,uniquer,flags,0) < 0) return(0);
     int nobj=Array_count(objlist);
     cleanO Huge offsets=newOC(Huge,nobj);
 	eWrite("bplist00", 8);
@@ -2401,8 +2396,6 @@ void Json_data2os(oPrintf jprintf,pointer stream,char *str,int4 flags) {
 	#undef  Self
 	#define Self PLPTR5
 
-	enum { MAXjiLevel=100, };
-
 	#define hasFlag(bitflag) (self->flags & bitflag)
 
 	static pointer jsonAbort(Self self,Char msg) {
@@ -2607,7 +2600,7 @@ void Json_data2os(oPrintf jprintf,pointer stream,char *str,int4 flags) {
 	static void jsnSelfNOP(Self junk) { }
 
 	static Obj jsnLoadItem(Self self,char *ender,bool top) {
-		if (++_ iLevel>MAXjiLevel) OAbort("too many levels(%d). Circular?",_ iLevel);
+		if (++_ iLevel>MAX_PLEVEL) OAbort("too many levels(%d). Circular?",_ iLevel);
 		const $CLEANUP(jsndecLevel) Self selfcopy= self;
 			jsnSelfNOP(selfcopy);
 
@@ -2798,8 +2791,6 @@ char* Json_stringEncode(int bufsize,char *buffer,char *a,Char *extra,int4 flags)
 	#undef  Self
 	#define Self PLPTR6
 
-	enum { MAXjoLevel=100, };
-
 	#define ePrintf(...) self->oprintf(self->stream,__VA_ARGS__)
 
 	#define hasFlag(bitflag) (self->flags & bitflag)
@@ -2954,7 +2945,7 @@ Obj Json_toStream(Obj stream,Obj container,int flags) {
 	#undef BLEN
 
 	static pointer jsn_saveItem(Self self,Obj obj,int isArray) {
-		if (++_ iLevel>MAXjoLevel) OAbort("too many levels(%d). Circular?",_ iLevel);
+		if (++_ iLevel>MAX_PLEVEL) OAbort("too many levels(%d). Circular?",_ iLevel);
 		if (isa_(obj,Dictionary)) {
 			if (!json_3Dict(self,obj)) return(0);
 			}

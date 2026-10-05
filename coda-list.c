@@ -21,7 +21,7 @@ along with Coda-P. If not, see <https://www.gnu.org/licenses/>.
 
 	#define QWebsite "www.coda-c.com"
 	#define QCopyYears	"2026"
-	#define QVersion	"3.1"
+	#define QVersion	"3.3"
 
 	#include "./coda-p.h"
 

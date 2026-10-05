@@ -10,8 +10,8 @@ The table below outlines which versions of the project currently receive securit
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 3.1.x   | :white_check_mark: |
-| < 3.1   | :x:                |
+| 3.3.x   | :white_check_mark: |
+| < 3.3   | :x:                |
 
 ## Reporting a Vulnerability
 

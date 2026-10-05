@@ -1,5 +1,5 @@
 #pragma once
-/* www.coda-c.com  coda-p.h
+/* www.coda-c.com  coda-p.h  Version 3.3
 
 Copyright (C) 2026 Stephen M. Jones
 
@@ -211,4 +211,6 @@ void CodaEqualsValue(char *var,Char $CONSUMED value);
 
 	#include <stdarg.h>
 	#include <stddef.h>
+
+	enum { MAX_PLEVEL=100 };
 
