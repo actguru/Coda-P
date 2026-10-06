@@ -3,7 +3,7 @@ Coda-C Property List Library
 
 ## ⭐️ The Coda-C Property List Library ⭐️
 
-This library provides a classed system of objects that model the Apple Propery List or 'plist'.
+This library provides a classed system of objects that model the Apple Property List or 'plist'.
 A plist is any one of the supported objects where containers reference
 supported objects, but is most often a Dictionary.
 Plists are easy to create and modify programmatically, and even easier to save and load from disk.
@@ -59,7 +59,7 @@ Each argument to this program is an instruction for inspecting, loading, saving,
 
 ### 🔵 Features:
 
-* Create specific new compoents or add JSON branches
+* Create specific new objects or add JSON branches
 * Combine and prune plists
 * BASE-64 data extraction and file insertions
 * Easily convert formats 
