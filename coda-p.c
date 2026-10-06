@@ -2399,7 +2399,7 @@ void Json_data2os(oPrintf jprintf,pointer stream,char *str,int4 flags) {
 	#define hasFlag(bitflag) (self->flags & bitflag)
 
 	static pointer jsonAbort(Self self,Char msg) {
-		Error_F("line %d: %s",_ lno+1,msg);
+		Error_F("pos %d: line %d: %s",_ pos,_ lno+1,msg);
 		freeO(msg); msg=0;
 		return(0);
 		}
@@ -2513,19 +2513,13 @@ void Json_data2os(oPrintf jprintf,pointer stream,char *str,int4 flags) {
 			if (!isa_(key,Char)) abortP("Bad Dictionary key?");
 
 			cleanO Obj colon=jsnLoadItem(self,0,0); if (!colon) return(0);
-			if (colon!=kColon) {
-				cleanO Char msg=ToContainer(colon);
-				abortP("Dict: missing colon? ( %s )",msg);
-				}
+			if (colon!=kColon) abortP("Dict: missing colon?");
 
 			cleanO Obj obj=jsnLoadItem(self,0,0); if (!obj) return(0);
 			Dict_set(dict,key,obj);
 			cleanO Obj comma=jsnLoadItem(self,ender,0); if (!comma) return(0);
 			if (comma==ender) break;
-			if (comma!=kComma) {
-				cleanO Char msg=ToContainer(comma);
-				abortP("Dict: missing comma? ( %s )",msg);
-				}
+			if (comma!=kComma) abortP("Dict: missing comma?");
 			}
 		return("OK");
 		}
@@ -2587,7 +2581,7 @@ void Json_data2os(oPrintf jprintf,pointer stream,char *str,int4 flags) {
 
 	static bool nameCc(int cc,bool notfirst) {
 		cc&=0xFF;
-		if (cc>127) return(1);
+		if (cc>127 && cc!=0xFF) return(1);
 		if ( (cc>='a' && cc<='z') || (cc>='A' && cc<='Z') || cc=='_' || cc=='$') return(1);
 		if (notfirst && (cc>='0' && cc<='9') ) return(1);
 		return(0);
@@ -2606,6 +2600,7 @@ void Json_data2os(oPrintf jprintf,pointer stream,char *str,int4 flags) {
 
 		int cc=jsn_getCc(self);
 		while(cc==32 || cc=='\t' || cc=='\r' || cc=='\n') cc=jsn_getCc(self);
+		if (cc==EOF) abortP("End of File?");
 
 		if (ender && *ender==cc) return(ender);
 
@@ -2701,7 +2696,7 @@ Obj Json_FromBlock(int count,pointer block,int flags) {
 	if (!redirect) {
 		for(int j=0;j<count;++j) {
 			int cc= *(Char)(block+j);
-			if (!cc) OAbort("null char found at pos %d?",j);
+			if (!cc) { count=j; break; }
 			}
 		}
 
