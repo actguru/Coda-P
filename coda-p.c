@@ -20,7 +20,7 @@ along with Coda-P. If not, see <https://www.gnu.org/licenses/>.
 */
 	#define QWebsite "www.coda-c.com"
 	#define QCopyYears	"2026"
-	#define QVersion	"3.3"
+	#define QVersion	"3.4"
 
 	#define _GNU_SOURCE 1
 
@@ -37,8 +37,6 @@ bool PList_leafClass(Obj obj,bool apple);
 bool PList_stringDecode(char *string,int *errPos);
 char* PList_stringEncode(int bufsize,char *buffer,char *a,Char *extra,bool amp38);
 Obj Unique_obj(Obj uniquer,Obj obj,bool *isadup,int flags);
-
-	#define Assert_ assert
 
 char Data_base64s[]=
 	"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -97,7 +95,7 @@ class Bool_Value(bool value) {
 
 method$(Char,Info) { return Char_F("%s[%d]=(%d,...) aka _Bool",kindO(self),sizeO(self),*self); }
 
-class $(FromString,char *string) {
+class $(FromString,char *string) { (void)self;
 	char *str=string;
 	while(cc_isWhite(*str)) ++str;
 	if (!*str) OAbort("empty <bool> value ''");
@@ -108,13 +106,13 @@ class $(FromString,char *string) {
 
 Char $(ToString) { return ( *self ? Os("true"):Os("false")); }
 
-method$(Char,xmlTag) { return Os("bool"); }
+method$(Char,xmlTag) { return Os("bool"); (void)self; }
 
-method$(Char,ToDelimiter,int index) {
+method$(Char,ToDelimiter,int index) { (void)self;
 	static Char da[]={ Os(", "), Os("<bool>["), Os("]"), Os("?") }; return da[index&3];
 	}
 
-method$(Char,ToStringSub,int index) { return Bool_ToString(self); }
+method$(Char,ToStringSub,$UNUSED int index) { return Bool_ToString(self); }
 
 $boot(StephenMJones) { CodaSig(FromString); CodaSig(ToString); }
 #undef class
@@ -203,7 +201,7 @@ class $(NewBlock,int count,pointer address) {
 
 method$(Char,Info) { return Char_F("%s[%d] aka void*",kindO(self),Data_count(self)); }
 
-class $(FromString,char *string) {
+class $(FromString,char *string) { (void)self;
 	int len=cs_length(string); char temp[len+16];
 	huge hval=Data_base64decode(temp,len+8,string,len);
 	if (hval<0) OAbort("base64 data decode error.");
@@ -219,7 +217,7 @@ Char $(ToString) {
 	return(str);
 	}
 
-method$(Char,xmlTag) { return Os("data"); }
+method$(Char,xmlTag) { return Os("data"); (void)self; }
 
 $boot(StephenMJones) { CodaSig(NewBlock); CodaSig(FromString); CodaSig(ToString); }
 #undef class
@@ -234,14 +232,14 @@ DateString DateString_Value(char *string) {
 
 method$(Char,Info) { return Char_F("DateString[%d]=%s aka char*",sizeO(self),(char *)self); }
 
-DateString $(FromString,char *str) {
+DateString $(FromString,char *str) { (void)self;
 	if (!DateString_toGmtime(str)) return(0);
 	return DateString_Value(str);
 	}
 
 Char $(ToString) { return Char_Value(self); }
 
-method$(Char,xmlTag) { return Os("date"); }
+method$(Char,xmlTag) { return Os("date"); (void)self; }
 
 $boot(StephenMJones) { CodaSig(FromString); CodaSig(ToString); }
 #undef class
@@ -298,14 +296,14 @@ class $(NewBlock,int count,pointer address) {
 
 method$(Char,Info) { return Char_F("%s[%d]=(%3.2f,...) aka float*",kindO(self),Float_count(self),*self); }
 
-class $(FromString,char *string) {
+class $(FromString,char *string) { (void)self;
 	char *str=string;
 	while(cc_isWhite(*str)) ++str;
 	if (!*str) OAbort("empty <float> value ''");
 	return Float_Value( cs_toReal(str) );
 	}
 
-method$(Char,ToDelimiter,int index) {
+method$(Char,ToDelimiter,int index) { (void)self;
 	static Char da[]={ Os(", "), Os("<float>["), Os("]"), Os("?") }; return da[index&3];
 	}
 
@@ -328,15 +326,15 @@ class $(NewBlock,int count,pointer address) {
 
 method$(Char,Info) { return Char_F("%s[%d]=(%lld,...) aka huge*",kindO(self),Huge_count(self),*self); }
 
-class $(FromString,char *string) {
+class $(FromString,char *string) { (void)self;
 	return Huge2_FromString(string);
 	}
 
-method$(Char,xmlTag) { return Os("integer"); }
+method$(Char,xmlTag) { return Os("integer"); (void)self; }
 
 Char $(ToString) { return Huge2_ToString(self); }
 
-method$(Char,ToDelimiter,int index) {
+method$(Char,ToDelimiter,int index) { (void)self;
 	static Char da[]={ Os(", "), Os("<huge>["), Os("]"), Os("?") }; return da[index&3];
 	}
 
@@ -431,9 +429,9 @@ class $(FromString,char *string) {
 	return(self);
 	}
 
-method$(Char,xmlTag) { return Os("uid"); }
+method$(Char,xmlTag) { return Os("uid"); (void)self; }
 
-method$(Char,ToDelimiter,int index) {
+method$(Char,ToDelimiter,int index) { (void)self;
 	static Char da[]={ Os(", "), Os("<uid>["), Os("]"), Os("?") }; return da[index&3];
 	}
 
@@ -454,7 +452,7 @@ class $(NewBlock,int count,pointer address) {
 
 method$(Char,Info) { return Char_F("%s[%d]=(%d,...), aka int4*",kindO(self),Int4_count(self),*self); }
 
-method$(Char,ToDelimiter,int index) {
+method$(Char,ToDelimiter,int index) { (void)self;
 	static Char da[]={ Os(", "), Os("<int4>["), Os("]"), Os("?") }; return da[index&3];
 	}
 
@@ -519,7 +517,7 @@ class $(NewBlock,int count,pointer address) {
 
 method$(Char,Info) { return Char_F("%s[%d]=(%3.2f,...) aka double*",kindO(self),Real_count(self),*self); }
 
-class $(FromString,char *string) {
+class $(FromString,char *string) { (void)self;
 	char *str=string;
 	while(cc_isWhite(*str)) ++str;
 	if (!*str) OAbort("empty <real> value ''");
@@ -537,9 +535,9 @@ class $(FromString,char *string) {
 
 Char $(ToString) { return Char_F("%.16e",*self); }
 
-method$(Char,xmlTag) { return Os("real"); }
+method$(Char,xmlTag) { return Os("real"); (void)self; }
 
-method$(Char,ToDelimiter,int index) {
+method$(Char,ToDelimiter,int index) { (void)self;
 	static Char da[]={ Os(", "), Os("<real>["), Os("]"), Os("?") }; return da[index&3];
 	}
 
@@ -559,7 +557,7 @@ class $(NewBlock,int count,pointer address) {
 
 method$(Char,Info) { return Char_F("%s[%d]=(%d,...) aka short*",kindO(self),Short_count(self),*self); }
 
-method$(Char,ToDelimiter,int index) {
+method$(Char,ToDelimiter,int index) { (void)self;
 	static Char da[]={ Os(", "), Os("<short>["), Os("]"), Os("?") }; return da[index&3];
 	}
 
@@ -936,7 +934,7 @@ int $FORMAT23 $(oPrintf,char *format,...) {
 	va_list ap; va_start(ap,format);
 		int len=0;
 			char buf[4096]; len=vsnprintf(buf,sizeof(buf),format,ap);
-			char *cp=0; if (len>=sizeof(buf)) {
+			char *cp=0; if (len>=(int)sizeof(buf)) {
 				va_end(ap);
 				va_start(ap,format);
 				len=vasprintf(&cp,format,ap); Assert_(cp);
@@ -1211,7 +1209,7 @@ static pointer ptrToken(Self self,int flags) {
 		Self self=(*(Self*)vp);
 		--_ iLevel;
 		}
-	static void SelfNOP(Self junk) { }
+	static void SelfNOP(Self junk) { (void)junk; }
 
 	static Obj ptrLoadItem(Self self,char *ender) {
 		if (++_ iLevel>MAX_PLEVEL) OAbort("too many levels(%d). Circular?",_ iLevel);
@@ -1294,7 +1292,7 @@ static pointer ptrToken(Self self,int flags) {
 	static __thread int4 PList_lastLoadTypeThread=0;
 int4 PList_lastLoadType() { return(PList_lastLoadTypeThread); }
 
-Obj PList_FromBlock(int count,pointer block,int flags) {
+Obj PList_FromBlock(int count,pointer block,int flags) { (void)flags;
 	if (!block) OAbort("Null data!");
 	Self self=alocS(sizeat(Self));
 		_ blob=block;
@@ -1559,7 +1557,7 @@ Obj PList_toStream(Obj stream,Obj container,int flags) {
 		if (j>0) ePrintf("%s",a);
 		}
 
-	static void Data2_PLData2os(Data obj,Self self,int chunk,int indent,Char str) ;
+	static void Data2_PLData2os(Self self,int chunk,int indent,Char str) ;
 
 	static pointer saveLeaf(Self self,Obj obj,int isArray,int indent) {
 		if (!PList_leafClass(obj, hasFlag(PLIST_Apple)) ) {
@@ -1609,7 +1607,7 @@ Obj PList_toStream(Obj stream,Obj container,int flags) {
 
 		if (isa_(obj,Bool)) ePrintf("<%s/>\n",buffer);
 		ei (isa_(obj,Data)) {
-			Data2_PLData2os(obj,self,(_ flags>>16)&0x0FFF,indent+1-leaf,aa);
+			Data2_PLData2os(self,(_ flags>>16)&0x0FFF,indent+1-leaf,aa);
 			}
 		else ePrintf("<%s>%s</%s>\n",kind,buffer,kind);
 
@@ -1711,7 +1709,7 @@ Obj PList_toStream(Obj stream,Obj container,int flags) {
 		return(buf);
 		}
 
-	static void Data2_PLData2os(Data obj,Self self,int chunk,int indent,Char str) {
+	static void Data2_PLData2os(Self self,int chunk,int indent,Char str) {
 		if (chunk && (chunk<4 || chunk>4095)) chunk=72;
 		ePrintf("<%s>","data");
 			int len=cs_length(str);
@@ -1845,7 +1843,7 @@ enum {  MarkerNull=0x00, MarkerFalse=0x08, MarkerTrue=0x09, MarkerFill=0x0F, Mar
 		return getint(_ blob + offsetsAt + at * offWidth, offWidth);
 		}
 
-	static void *bplistAbort(Self self,char *msg) {
+	static void *bplistAbort(Self self,Char msg) { (void)self;
 		Error_F("PList_BinaryLoad; %s",msg);
 		freeO(msg);
 		return(0);
@@ -1860,7 +1858,7 @@ Obj PList_BinaryLoad(int count,pointer block) {
 	Self self=alocS(sizeat(Self));
 		_ blob=block;
 		_ blobNel=count;
-	if (_ blobNel<sizeof(_ ender)+sizeof(Header)+1) abortF("file too small");
+	if (_ blobNel<(int)sizeof(_ ender)+(int)sizeof(Header)+1) abortF("file too small");
 		if (!bplistTop(self)) return(0);
 	void* obj=bplistObject(self,topObject,0,0); if (!obj) return(0);
 	return(obj);
@@ -1887,11 +1885,11 @@ Obj PList_BinaryLoad(int count,pointer block) {
 		if (refWidth<1||refWidth>8)	 abortF("BP: refWidth bad %d",refWidth);
 
 		uhuge tablesize = numObjects * offWidth;
-		if (_ blobNel != offsetsAt + tablesize + sizeof(_ ender))
+		if ( ((uhuge)_ blobNel) != offsetsAt + tablesize + sizeof(_ ender))
 									 abortF("BP: file size recompute error.");
-		for(int j=0;j<numObjects;++j) {
+		for(int j=0;j< (int)numObjects;++j) {
 			uhuge off=getoffset(self,j);
-			if (off<sizeof(Header) || off>=offsetsAt) abortF("BP: obj #%d bad",j);
+			if (off< (int)sizeof(Header) || off>=offsetsAt) abortF("BP: obj #%d bad",j);
 			}
 
 		return(self);
@@ -1901,11 +1899,11 @@ Obj PList_BinaryLoad(int count,pointer block) {
 		++level; int j,k;
 		for(j=0;j<nel;++j) {
 			k=getint(args+j*refWidth,refWidth);
-			if (k<0 || k>=numObjects) abortF("BP: Dict: Key range error %d/%d.",k,(int)numObjects);
+			if (k<0 || k>=(int)numObjects) abortF("BP: Dict: Key range error %d/%d.",k,(int)numObjects);
 			cleanO Char key=bplistObject(self,k,level,1); if (!key) return(0);
 
 			k=getint(args+(nel+j)*refWidth,refWidth);
-			if (k<0 || k>=numObjects) abortF("BP: Dict: Obj range error %d/%d.",k,(int)numObjects);
+			if (k<0 || k>=(int)numObjects) abortF("BP: Dict: Obj range error %d/%d.",k,(int)numObjects);
 			Obj obj=bplistObject(self,k,level,0); if (!obj) return(0);
 
 			if (obj==ANull) obj=JsonNull_Value();
@@ -1918,7 +1916,7 @@ Obj PList_BinaryLoad(int count,pointer block) {
 		++level; int j,k;
 		for(j=0;j<nel;++j) {
 			k=getint(args+j*refWidth,refWidth);
-			if (k<0 || k>=numObjects) abortF("BP: Array: Obj range error %d/%d.",k,(int)numObjects);
+			if (k<0 || k>=(int)numObjects) abortF("BP: Array: Obj range error %d/%d.",k,(int)numObjects);
 			Obj obj=bplistObject(self,k,level,0); if (!obj) return(0);
 			if (obj==ANull) obj=0;
 			Array_take(array,obj);
@@ -1964,7 +1962,7 @@ Obj PList_BinaryLoad(int count,pointer block) {
 			case MarkerUnicode16: ;
 				#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
 				{ unsigned short *u16=(unsigned short*)cp;
-				for(int j=0;j<nel;++j) u16[j]= ((u16[j]<<8)&0xFF00) | ((u16[j]>>8)&0xFF);
+				for(int j=0;j<(int)nel;++j) u16[j]= ((u16[j]<<8)&0xFF00) | ((u16[j]>>8)&0xFF);
 					}
 				#endif
 
@@ -2591,7 +2589,7 @@ void Json_data2os(oPrintf jprintf,pointer stream,char *str,int4 flags) {
 		Self self=(*(Self*)vp);
 		--_ iLevel;
 		}
-	static void jsnSelfNOP(Self junk) { }
+	static void jsnSelfNOP(Self junk) { (void)junk; }
 
 	static Obj jsnLoadItem(Self self,char *ender,bool top) {
 		if (++_ iLevel>MAX_PLEVEL) OAbort("too many levels(%d). Circular?",_ iLevel);
@@ -2652,7 +2650,7 @@ void Json_data2os(oPrintf jprintf,pointer stream,char *str,int4 flags) {
 		if (nameCc(cc,0)) {
 			char name[128]={cc};
 			int j=0;
-			for(j=1;j<sizeof(name)-1;++j) {
+			for(j=1;j<(int)sizeof(name)-1;++j) {
 				cc=jsn_getCc(self); if (cc==EOF) break;
 				if (!nameCc(cc,1)) { jsn_ungetCc(self,1); break; }
 				name[j]=cc;
@@ -2846,7 +2844,7 @@ Obj Json_toStream(Obj stream,Obj container,int flags) {
 		}
 
 		bool PList_leafClass(Obj obj,bool apple) ;
-	static pointer jsn_saveLeaf(Self self,Obj obj,int isArray) {
+	static pointer jsn_saveLeaf(Self self,Obj obj,int isArray) { (void)isArray;
 		if (!PList_leafClass(obj, 1)) {
 			if (isa_JsonNull(obj)) { ePrintf("null"); return(self); }
 			if (isa_(obj,HugeUID)) {
@@ -3070,7 +3068,7 @@ void defer_call_cleanup(void *vp) {
 		}
 	}
 
-void defer_NOP(void *vp) { }
+void defer_NOP(void *vp) { (void)vp; }
 
 	#include <dirent.h>
 

@@ -1,5 +1,5 @@
 #pragma once
-/* www.coda-c.com  coda-p.h  Version 3.3
+/* www.coda-c.com  coda-p.h  Version 3.4
 
 Copyright (C) 2026 Stephen M. Jones
 
